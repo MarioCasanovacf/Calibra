@@ -25,6 +25,11 @@ export const jobs = sqliteTable("jobs", {
   evidence: text("evidence").notNull().default("{}"),
   status: text("status").notNull().default("Identificada"),
   nextAction: text("next_action").notNull().default("Revisar requisitos"),
+  humanDecision: text("human_decision").notNull().default("Pendiente"),
+  humanReason: text("human_reason"),
+  humanNote: text("human_note"),
+  humanScore: integer("human_score"),
+  feedbackAt: text("feedback_at"),
   isNew: integer("is_new", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -46,3 +51,16 @@ export const searchRuns = sqliteTable("search_runs", {
   startedAt: text("started_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   completedAt: text("completed_at"),
 });
+
+export const agentRuns = sqliteTable("agent_runs", {
+  id: text("id").primaryKey(),
+  protocolVersion: text("protocol_version").notNull(),
+  fileName: text("file_name").notNull().default("Lote pegado"),
+  status: text("status").notNull().default("completed"),
+  total: integer("total").notNull().default(0),
+  inserted: integer("inserted").notNull().default(0),
+  duplicates: integer("duplicates").notNull().default(0),
+  invalid: integer("invalid").notNull().default(0),
+  issues: text("issues").notNull().default("[]"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [index("agent_runs_created_idx").on(table.createdAt)]);

@@ -39,6 +39,11 @@ export async function ensureSchema() {
       evidence TEXT DEFAULT '{}' NOT NULL,
       status TEXT DEFAULT 'Identificada' NOT NULL,
       next_action TEXT DEFAULT 'Revisar requisitos' NOT NULL,
+      human_decision TEXT DEFAULT 'Pendiente' NOT NULL,
+      human_reason TEXT,
+      human_note TEXT,
+      human_score INTEGER,
+      feedback_at TEXT,
       is_new INTEGER DEFAULT 1 NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -58,5 +63,29 @@ export async function ensureSchema() {
       started_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       completed_at TEXT
     )`),
+    d1.prepare(`CREATE TABLE IF NOT EXISTS agent_runs (
+      id TEXT PRIMARY KEY NOT NULL,
+      protocol_version TEXT NOT NULL,
+      file_name TEXT DEFAULT 'Lote pegado' NOT NULL,
+      status TEXT DEFAULT 'completed' NOT NULL,
+      total INTEGER DEFAULT 0 NOT NULL,
+      inserted INTEGER DEFAULT 0 NOT NULL,
+      duplicates INTEGER DEFAULT 0 NOT NULL,
+      invalid INTEGER DEFAULT 0 NOT NULL,
+      issues TEXT DEFAULT '[]' NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )`),
+    d1.prepare("CREATE INDEX IF NOT EXISTS agent_runs_created_idx ON agent_runs (created_at)"),
   ]);
+  const columns = await d1.prepare("PRAGMA table_info(jobs)").all<{ name: string }>();
+  const names = new Set((columns.results || []).map((column) => column.name));
+  const additions = [
+    ["human_decision", "ALTER TABLE jobs ADD COLUMN human_decision TEXT DEFAULT 'Pendiente' NOT NULL"],
+    ["human_reason", "ALTER TABLE jobs ADD COLUMN human_reason TEXT"],
+    ["human_note", "ALTER TABLE jobs ADD COLUMN human_note TEXT"],
+    ["human_score", "ALTER TABLE jobs ADD COLUMN human_score INTEGER"],
+    ["feedback_at", "ALTER TABLE jobs ADD COLUMN feedback_at TEXT"],
+  ] as const;
+  const missing = additions.filter(([name]) => !names.has(name)).map(([, statement]) => d1.prepare(statement));
+  if (missing.length) await d1.batch(missing);
 }

@@ -8,6 +8,13 @@
       "when": 1784076113394,
       "tag": "0000_happy_agent_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784077501774,
+      "tag": "0001_slim_power_pack",
+      "breakpoints": true
     }
   ]
 }
