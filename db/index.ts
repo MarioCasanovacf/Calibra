@@ -4,7 +4,7 @@ import * as schema from "./schema";
 
 export function getD1() {
   const bindings = env as unknown as { DB?: D1Database };
-  if (!bindings.DB) throw new Error("La base de datos de Jossette no está disponible.");
+  if (!bindings.DB) throw new Error("La base de datos de Calibra no está disponible.");
   return bindings.DB;
 }
 

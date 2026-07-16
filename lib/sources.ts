@@ -41,7 +41,7 @@ export async function fetchHimalayas(): Promise<{jobs: DiscoveredJob[]; scanned:
     url.searchParams.set("employment_type", "Contractor");
     url.searchParams.set("sort", "recent");
     url.searchParams.set("page", "1");
-    const response = await fetch(url, { headers: { Accept: "application/json", "User-Agent": "Jossette/1.0 job-search assistant" } });
+    const response = await fetch(url, { headers: { Accept: "application/json", "User-Agent": "Calibra/1.0 job-search assistant" } });
     if (!response.ok) throw new Error(`Himalayas respondió ${response.status}`);
     return response.json() as Promise<{jobs?: Record<string, unknown>[]}>;
   }));
@@ -71,7 +71,7 @@ export async function fetchHimalayas(): Promise<{jobs: DiscoveredJob[]; scanned:
 }
 
 export async function fetchRemotive(): Promise<{jobs: DiscoveredJob[]; scanned: number; rejected: number}> {
-  const response = await fetch("https://remotive.com/api/remote-jobs?search=data&limit=50", { headers: { Accept: "application/json", "User-Agent": "Jossette/1.0 job-search assistant" } });
+  const response = await fetch("https://remotive.com/api/remote-jobs?search=data&limit=50", { headers: { Accept: "application/json", "User-Agent": "Calibra/1.0 job-search assistant" } });
   if (!response.ok) throw new Error(`Remotive respondió ${response.status}`);
   const data = await response.json() as {jobs?: Record<string, unknown>[]};
   const rawJobs = data.jobs || [];

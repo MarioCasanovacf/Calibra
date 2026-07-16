@@ -1,6 +1,6 @@
 import { candidateProfile, cvProfiles } from "./profile";
 
-export const ANTIGRAVITY_PROTOCOL = "jossette.antigravity.v1";
+export const ANTIGRAVITY_PROTOCOL = "calibra.antigravity.v1";
 
 export const decisionReasons = [
   "Match técnico",
@@ -125,14 +125,14 @@ export function buildAntigravityPackage(seenJobs: Array<{
     ? seenJobs.map((job) => `- ${job.company} — ${job.title} — estado: ${job.status} — decisión humana: ${job.humanDecision}${job.humanReason ? ` (${job.humanReason})` : ""}${job.humanScore === null ? "" : ` — score humano: ${job.humanScore}`} — ${job.sourceUrl}`).join("\n")
     : "- Ninguna todavía.";
 
-  return `# Jossette × Antigravity — paquete operativo
+  return `# Calibra × Antigravity — paquete operativo
 
 Versión del protocolo: ${ANTIGRAVITY_PROTOCOL}
 Generado: ${new Date().toISOString()}
 
 ## Tu papel
 
-Actúas como agente de investigación de vacantes para Mario Casanova. Busca, abre, verifica y evalúa oportunidades reales. No inventes vacantes, no uses snippets como evidencia y no apliques por Mario. Tu única salida operativa es un archivo JSON válido que Jossette pueda importar.
+Actúas como agente de investigación de vacantes para Mario Casanova. Busca, abre, verifica y evalúa oportunidades reales. No inventes vacantes, no uses snippets como evidencia y no apliques por Mario. Tu única salida operativa es un archivo JSON válido que Calibra pueda importar.
 
 ## Perfil y filtros no negociables
 
@@ -142,7 +142,7 @@ Actúas como agente de investigación de vacantes para Mario Casanova. Busca, ab
 - Excluir si declara explícitamente FTE, W-2, permanent employee, EOR, híbrido u onsite.
 - Si el tipo de contratación no está explícito, conserva la oportunidad, usa contractor = null, limita el score a 74 y pide confirmarlo.
 - Seniority objetivo: Senior, Staff o Lead. Roles adyacentes solo si la experiencia es transferible y la compensación lo justifica.
-- Nunca autoaplicar. La decisión humana ocurre dentro de Jossette.
+- Nunca autoaplicar. La decisión humana ocurre dentro de Calibra.
 
 ## Cuatro CVs disponibles
 
@@ -200,7 +200,7 @@ Puedes incluir entre 0 y 100 vacantes. Un lote vacío es válido si no encontras
 
 ## Rutina diaria para Antigravity
 
-Si Antigravity permite tareas programadas, crea una ejecución diaria a las 07:30 en America/Mexico_City. En cada ejecución: lee este archivo, revisa primero resultados de los últimos siete días, rota al menos cuatro familias de fuentes, verifica cada página directa, elimina los elementos de “Vacantes ya conocidas” y guarda el JSON final como \`jossette-import-AAAA-MM-DD.json\`. No envíes aplicaciones ni mensajes a reclutadores. La persona operadora revisará el archivo y lo importará en Jossette.
+Si Antigravity permite tareas programadas, crea una ejecución diaria a las 07:30 en America/Mexico_City. En cada ejecución: lee este archivo, revisa primero resultados de los últimos siete días, rota al menos cuatro familias de fuentes, verifica cada página directa, elimina los elementos de “Vacantes ya conocidas” y guarda el JSON final como \`calibra-import-AAAA-MM-DD.json\`. No envíes aplicaciones ni mensajes a reclutadores. La persona operadora revisará el archivo y lo importará en Calibra.
 `;
 }
 

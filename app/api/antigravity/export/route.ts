@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       return new Response(JSON.stringify(antigravityTemplate(), null, 2), {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Content-Disposition": "attachment; filename=jossette-antigravity-template.json",
+          "Content-Disposition": "attachment; filename=calibra-antigravity-template.json",
         },
       });
     }
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     return new Response(markdown, {
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
-        "Content-Disposition": "attachment; filename=jossette-antigravity-paquete.md",
+        "Content-Disposition": "attachment; filename=calibra-antigravity-paquete.md",
       },
     });
   } catch (error) {

@@ -27,7 +27,7 @@ test("keeps the Antigravity protocol auditable and model-API free", async () => 
     source("package.json"),
   ]);
 
-  assert.match(protocol, /jossette\.antigravity\.v1/);
+  assert.match(protocol, /calibra\.antigravity\.v1/);
   assert.match(protocol, /Nunca autoaplicar/);
   assert.match(protocol, /evidence\.verification\.status/);
   assert.match(importRoute, /normalizeUrl/);
