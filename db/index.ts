@@ -1,21 +1,25 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-export function getD1() {
-  const bindings = env as unknown as { DB?: D1Database };
-  if (!bindings.DB) throw new Error("La base de datos de Calibra no está disponible.");
-  return bindings.DB;
+let client: Client | null = null;
+
+function getClient(): Client {
+  if (client) return client;
+  const url = process.env.DATABASE_URL || "file:local.db";
+  const authToken = process.env.DATABASE_AUTH_TOKEN;
+  client = createClient(authToken ? { url, authToken } : { url });
+  return client;
 }
 
 export function getDb() {
-  return drizzle(getD1(), { schema });
+  return drizzle(getClient(), { schema });
 }
 
 export async function ensureSchema() {
-  const d1 = getD1();
-  await d1.batch([
-    d1.prepare(`CREATE TABLE IF NOT EXISTS jobs (
+  const db = getClient();
+  await db.batch([
+    `CREATE TABLE IF NOT EXISTS jobs (
       id TEXT PRIMARY KEY NOT NULL,
       source TEXT NOT NULL,
       external_id TEXT NOT NULL,
@@ -47,11 +51,11 @@ export async function ensureSchema() {
       is_new INTEGER DEFAULT 1 NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
-    )`),
-    d1.prepare("CREATE UNIQUE INDEX IF NOT EXISTS jobs_source_external_idx ON jobs (source, external_id)"),
-    d1.prepare("CREATE INDEX IF NOT EXISTS jobs_score_idx ON jobs (score)"),
-    d1.prepare("CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs (status)"),
-    d1.prepare(`CREATE TABLE IF NOT EXISTS search_runs (
+    )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS jobs_source_external_idx ON jobs (source, external_id)`,
+    `CREATE INDEX IF NOT EXISTS jobs_score_idx ON jobs (score)`,
+    `CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs (status)`,
+    `CREATE TABLE IF NOT EXISTS search_runs (
       id TEXT PRIMARY KEY NOT NULL,
       source TEXT NOT NULL,
       status TEXT DEFAULT 'running' NOT NULL,
@@ -62,8 +66,8 @@ export async function ensureSchema() {
       error TEXT,
       started_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       completed_at TEXT
-    )`),
-    d1.prepare(`CREATE TABLE IF NOT EXISTS agent_runs (
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_runs (
       id TEXT PRIMARY KEY NOT NULL,
       protocol_version TEXT NOT NULL,
       file_name TEXT DEFAULT 'Lote pegado' NOT NULL,
@@ -74,11 +78,12 @@ export async function ensureSchema() {
       invalid INTEGER DEFAULT 0 NOT NULL,
       issues TEXT DEFAULT '[]' NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
-    )`),
-    d1.prepare("CREATE INDEX IF NOT EXISTS agent_runs_created_idx ON agent_runs (created_at)"),
-  ]);
-  const columns = await d1.prepare("PRAGMA table_info(jobs)").all<{ name: string }>();
-  const names = new Set((columns.results || []).map((column) => column.name));
+    )`,
+    `CREATE INDEX IF NOT EXISTS agent_runs_created_idx ON agent_runs (created_at)`,
+  ], "write");
+
+  const columns = await db.execute("PRAGMA table_info(jobs)");
+  const names = new Set(columns.rows.map((column) => String(column.name)));
   const additions = [
     ["human_decision", "ALTER TABLE jobs ADD COLUMN human_decision TEXT DEFAULT 'Pendiente' NOT NULL"],
     ["human_reason", "ALTER TABLE jobs ADD COLUMN human_reason TEXT"],
@@ -86,6 +91,6 @@ export async function ensureSchema() {
     ["human_score", "ALTER TABLE jobs ADD COLUMN human_score INTEGER"],
     ["feedback_at", "ALTER TABLE jobs ADD COLUMN feedback_at TEXT"],
   ] as const;
-  const missing = additions.filter(([name]) => !names.has(name)).map(([, statement]) => d1.prepare(statement));
-  if (missing.length) await d1.batch(missing);
+  const missing = additions.filter(([name]) => !names.has(name)).map(([, statement]) => statement);
+  if (missing.length) await db.batch(missing, "write");
 }

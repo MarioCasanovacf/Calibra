@@ -3,6 +3,8 @@ import { ensureSchema, getDb } from "../../../../db";
 import { jobs } from "../../../../db/schema";
 import { antigravityTemplate, buildAntigravityPackage } from "../../../../lib/antigravity";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     await ensureSchema();

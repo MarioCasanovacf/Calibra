@@ -9,6 +9,8 @@ import {
   type AntigravityJob,
 } from "../../../../lib/antigravity";
 
+export const dynamic = "force-dynamic";
+
 type Issue = { index: number; field: string; message: string };
 
 function text(value: unknown, max = 12000) {

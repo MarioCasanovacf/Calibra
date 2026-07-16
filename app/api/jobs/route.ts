@@ -3,6 +3,8 @@ import { ensureSchema, getDb } from "../../../db";
 import { jobs, searchRuns } from "../../../db/schema";
 import { fetchHimalayas, fetchRemotive, type DiscoveredJob, verifiedLegacyJobs } from "../../../lib/sources";
 
+export const dynamic = "force-dynamic";
+
 function serialize(row: typeof jobs.$inferSelect) {
   return {
     ...row,

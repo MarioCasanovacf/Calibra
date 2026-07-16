@@ -1,98 +1,82 @@
-# vinext-starter
+# Calibra
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Radar de búsqueda de empleo con scoring explicable, pipeline de aplicaciones
+persistente y calibración por decisión humana. Integra un flujo con Antigravity
+(Gemini) para descubrir vacantes reales sin usar ninguna API de IA propia.
 
-## Prerequisites
+App **independiente**: Next.js + Drizzle sobre libSQL/SQLite. Corre local con un
+archivo y se despliega en cualquier host de Node (Vercel, etc.) con Turso.
+
+## Requisitos
 
 - Node.js `>=22.13.0`
 
-## Quick Start
+## Desarrollo local
 
 ```bash
 npm install
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+Abre http://localhost:3000. Por defecto la base de datos es un archivo local
+`local.db` que se crea solo en el primer arranque. No necesitas configurar nada
+más para probarla.
 
-## Included Shape
+## Variables de entorno
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+Copia `.env.example` a `.env.local` y ajusta según el entorno:
 
-## Workspace Auth Headers
+| Variable              | Local            | Producción                        |
+| --------------------- | ---------------- | --------------------------------- |
+| `DATABASE_URL`        | (vacío → `local.db`) | `libsql://tu-base.turso.io`   |
+| `DATABASE_AUTH_TOKEN` | (vacío)          | token de Turso                    |
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+En local puedes dejar ambas sin definir.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Despliegue (Vercel + Turso)
 
-Treat the full name as optional and fall back to email when it is absent:
+1. Crea una base de datos gratis en [Turso](https://turso.tech) y copia su URL
+   (`libsql://...`) y un token de autenticación.
+2. Importa el repositorio en [Vercel](https://vercel.com).
+3. En **Settings → Environment Variables** define `DATABASE_URL` y
+   `DATABASE_AUTH_TOKEN`.
+4. Deploy. Vercel corre `npm run build` y sirve la app.
 
-```tsx
-import { headers } from "next/headers";
+Sirve igual en cualquier host de Node: `npm run build && npm run start`.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Base de datos
 
-  const displayName = fullName ?? email;
-  // ...
-}
+El esquema se crea/actualiza solo al arrancar (`ensureSchema` en
+[db/index.ts](db/index.ts)). Para generar migraciones de Drizzle tras cambiar
+[db/schema.ts](db/schema.ts):
+
+```bash
+npm run db:generate
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+## Perfil y filtros
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+El scoring se basa en el perfil definido en [lib/profile.ts](lib/profile.ts)
+(nombre, skills, filtros duros y los cuatro CVs). Edita ese archivo para
+adaptar la app a otra persona.
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+## Flujo Antigravity
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+- **Exportar paquete:** `Centro Antigravity → Copiar instrucciones` genera el
+  contexto (perfil, filtros, CVs, decisiones previas, formato de salida) para
+  pegar en Antigravity.
+- **Importar lote:** el JSON que devuelve Gemini se valida, deduplica y persiste.
+  Solo entra evidencia verificable (protocolo `calibra.antigravity.v1`).
+- **Calibrar:** cada decisión humana (`Aplicaría` / `Descartar`, motivo, score)
+  queda ligada a la vacante y se incluye en el siguiente paquete.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+Sin API de IA propia, sin autoaplicar: toda aplicación requiere aprobación
+humana.
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+## Comandos
 
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+- `npm run dev`: desarrollo local
+- `npm run build`: build de producción
+- `npm run start`: servidor de producción
+- `npm test`: build + verificación del render
+- `npm run db:generate`: genera migraciones de Drizzle
