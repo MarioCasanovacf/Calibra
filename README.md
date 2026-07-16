@@ -11,6 +11,18 @@ archivo y se despliega en cualquier host de Node (Vercel, etc.) con Turso.
 
 - Node.js `>=22.13.0`
 
+## Uso sin terminal (Mac)
+
+Para correrla en tu propia Mac sin tocar la terminal:
+
+1. Instala [Node.js](https://nodejs.org/es/download) (versión LTS) una sola vez.
+2. Doble clic en **`Calibra.command`** desde el Finder.
+
+La primera vez tarda un par de minutos (prepara todo); después abre sola en
+http://localhost:3000. Deja esa ventana abierta mientras la usas; para cerrar la
+app, cierra la ventana. Todo se guarda en tu máquina, no necesitas internet ni
+ninguna cuenta.
+
 ## Desarrollo local
 
 ```bash
